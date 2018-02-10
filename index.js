@@ -25,59 +25,63 @@ const formatPerson = (person) => {
 }
 
 app.get('/info', (req, res) => {
-    res.send('<p>puhelinluettelossa on ' + persons.length + ' henkilön tiedot</p>' + '<p>' + new Date() + '</p>')
+    Person
+        .find({})
+        .then(persons => {
+            res.send('<p>puhelinluettelossa on ' + persons.length + ' henkilön tiedot</p>' + '<p>' + new Date() + '</p>')
+        })
 })
 
 app.get('/api/persons', (req, res) => {
     Person
         .find({}, { __v: 0 })
         .then(persons => {
-            response.json(persons.map(Person.format))
+            res.json(persons.map(Person.format))
         })
         .catch(error => {
             console.log(error)
         })
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (req, res) => {
     Person
-        .findById(request.params.id)
+        .findById(req.params.id)
         .then(person => {
             if (person) {
-                response.json(Person.format(person))
+                res.json(Person.format(person))
             } else {
-                response.status(404).end()
+                res.status(404).end()
             }
         })
         .catch(error => {
             console.log(error)
-            response.status(400).send({ error: 'malformatted id' })
+            res.status(400).send({ error: 'malformatted id' })
         })
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (req, res) => {
     Person
-        .findByIdAndRemove(request.params.id)
+        .findByIdAndRemove(req.params.id)
         .then(result => {
-            response.status(204).end()
+            res.status(204).end()
         })
         .catch(error => {
-            response.status(400).send({ error: 'malformatted id' })
+            res.status(400).send({ error: 'malformatted id' })
         })
 })
 
-app.post('/api/persons', (request, response) => {
-    const body = request.body
+app.post('/api/persons', (req, res) => {
+    const body = req.body
 
     if (body.name === undefined || body.number === undefined) {
-        return response.status(400).json({ error: 'name or number missing' })
+        return res.status(400).json({ error: 'name or number missing' })
     }
 
     Person
         .find({ name: body.name })
         .then(result => {
             if (result.length > 0) {
-                response.status(422).send({ error: 'name must be unique' })
+                res.status(422).send({ error: 'name must be unique' })
             } else {
                 const person = new Person({
                     name: body.name,
@@ -89,14 +93,14 @@ app.post('/api/persons', (request, response) => {
                         return Person.format(savedNote)
                     })
                     .then(savedAndFormattedPerson => {
-                        response.json(savedAndFormattedPerson)
+                        res.json(savedAndFormattedPerson)
                     })
             }
         })
 })
 
-app.put('/api/persons/:id', (request, response) => {
-    const body = request.body
+app.put('/api/persons/:id', (req, res) => {
+    const body = req.body
 
     const person = {
         name: body.name,
@@ -104,13 +108,13 @@ app.put('/api/persons/:id', (request, response) => {
     }
 
     Person
-        .findByIdAndUpdate(request.params.id, person, { new: true })
+        .findByIdAndUpdate(req.params.id, person, { new: true })
         .then(updatedPerson => {
-            response.json(Person.format(updatedPerson))
+            res.json(Person.format(updatedPerson))
         })
         .catch(error => {
             console.log(error)
-            response.status(400).send({ error: 'malformatted id' })
+            res.status(400).send({ error: 'malformatted id' })
         })
 })
 
